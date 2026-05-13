@@ -80,14 +80,18 @@ const QAS = {
 };
 
 // ── micro UI ──────────────────────────────────────────────────────────────────
+const BADGE_STYLE = (col) => {
+  const m={blue:{bg:T.blueL,c:T.blue},green:{bg:T.greenL,c:T.green},orange:{bg:T.orangeL,c:T.orange},red:{bg:T.redL,c:T.red}};
+  return {display:"inline-block",alignSelf:"flex-start",padding:"3px 8px",borderRadius:6,fontSize:10,fontWeight:700,whiteSpace:"nowrap",lineHeight:1.4,background:m[col]?.bg,color:m[col]?.c};
+};
+const Tag = ({col="blue",children}) => <span style={BADGE_STYLE(col)}>{children}</span>;
+const stag = c => BADGE_STYLE(c==="g"?"green":c==="r"?"red":c==="o"?"orange":"blue");
+
 const Leaf = () => <svg width={24} height={24} viewBox="0 0 40 40" fill={T.red}><path d="M20 2L22 12L30 8L26 16L36 18L28 22L32 32L22 26L20 38L18 26L8 32L12 22L4 18L14 16L10 8L18 12Z"/></svg>;
 const Pulse = ({s=28}) => <div style={{width:s,height:s,borderRadius:s/2,background:T.blue,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><svg width={s*.6} height={s*.6} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>;
 const ChevL = ({onClick}) => <div onClick={onClick} style={{cursor:"pointer",padding:"4px 8px 4px 0"}}><svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={T.blue} strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg></div>;
 const Card = ({children,style={}}) => <div style={{background:T.white,borderRadius:12,border:`1px solid ${T.g200}`,padding:16,marginBottom:12,...style}}>{children}</div>;
 const SLbl = ({c}) => <div style={{fontSize:10,fontWeight:700,letterSpacing:1,textTransform:"uppercase",color:T.g400,marginBottom:8}}>{c}</div>;
-const BADGE_STYLE = (col) => { const m={blue:{bg:T.blueL,c:T.blue},green:{bg:T.greenL,c:T.green},orange:{bg:T.orangeL,c:T.orange},red:{bg:T.redL,c:T.red}}; return {display:"inline-block",alignSelf:"flex-start",padding:"3px 8px",borderRadius:6,fontSize:10,fontWeight:700,whiteSpace:"nowrap",lineHeight:1.4,background:m[col]?.bg,color:m[col]?.c}; };
-const Tag = ({col="blue",children}) => <span style={BADGE_STYLE(col)}>{children}</span>;
-const stag = c => ({display:"inline-block",padding:"2px 6px",borderRadius:4,fontSize:9,fontWeight:700,letterSpacing:.3,lineHeight:1.2,whiteSpace:"nowrap",background:c==="g"?"#D1FAE5":c==="o"?"#FEF3C7":c==="r"?T.redL:T.blueL,color:c==="g"?"#065F46":c==="o"?T.orange:c==="r"?T.red:T.blue});
 const Pill = ({active,onClick,children}) => <button onClick={onClick} style={{padding:"8px 14px",borderRadius:20,fontSize:13,cursor:"pointer",fontWeight:active?700:400,border:`1.5px solid ${active?T.blue:T.g200}`,background:active?T.blue:T.white,color:active?T.white:T.g500}}>{children}</button>;
 const YesNo = ({val,onChange,yes="Ano",no="Ne"}) => <div style={{display:"flex",gap:10}}>{[true,false].map(v=><button key={String(v)} onClick={()=>onChange(v)} style={{flex:1,padding:11,borderRadius:10,cursor:"pointer",fontWeight:700,fontSize:13,border:`1.5px solid ${val===v?T.blue:T.g200}`,background:val===v?T.blue:T.white,color:val===v?T.white:T.g500}}>{v?yes:no}</button>)}</div>;
 const FadeIn = ({children}) => { const [op,setOp]=useState(0); useEffect(()=>{const t=setTimeout(()=>setOp(1),20);return()=>clearTimeout(t);},[]);return <div style={{opacity:op,transform:op?"translateY(0)":"translateY(8px)",transition:"opacity .25s,transform .25s"}}>{children}</div>; };
@@ -124,7 +128,6 @@ const PBar = ({value,min,max,status}) => {
   </div>;
 };
 
-// ── Header ────────────────────────────────────────────────────────────────────
 const Hdr = ({title,sub,backFn}) => (
   <div style={{background:T.white,padding:"10px 20px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:`1px solid ${T.g200}`,flexShrink:0}}>
     {backFn?<ChevL onClick={backFn}/>:<div style={{width:28}}/>}
@@ -136,7 +139,6 @@ const Hdr = ({title,sub,backFn}) => (
   </div>
 );
 
-// ── Nav buttons (always rendered, never overlapped) ────────────────────────────
 const NavRow = ({step,total,onBack,onNext,nextLabel}) => (
   <div style={{display:"flex",gap:10,padding:"12px 16px",background:T.white,borderTop:`1px solid ${T.g200}`,flexShrink:0}}>
     {step>0&&<button onClick={onBack} style={{flex:1,padding:12,borderRadius:10,border:`1.5px solid ${T.g200}`,background:T.white,color:T.g700,fontWeight:700,fontSize:13,cursor:"pointer"}}>← Zpět</button>}
@@ -144,19 +146,15 @@ const NavRow = ({step,total,onBack,onNext,nextLabel}) => (
   </div>
 );
 
-// ── Chat ──────────────────────────────────────────────────────────────────────
 const MockChat = ({record}) => {
-  const qas = record.type==="lab"?QAS.lab:QAS.record;
-  const [msgs,setMsgs] = useState([{role:"ai",text:"Dobrý den! Jak vám mohu pomoci porozumět tomuto výsledku?"}]);
-  const [inp,setInp] = useState("");
-  const [loading,setLoading] = useState(false);
-  const ref = useRef(null);
+  const qas=record.type==="lab"?QAS.lab:QAS.record;
+  const [msgs,setMsgs]=useState([{role:"ai",text:"Dobrý den! Jak vám mohu pomoci porozumět tomuto výsledku?"}]);
+  const [inp,setInp]=useState(""); const [loading,setLoading]=useState(false);
+  const ref=useRef(null);
   useEffect(()=>{if(ref.current)ref.current.scrollTop=ref.current.scrollHeight;},[msgs,loading]);
-  const send = txt => {
+  const send=txt=>{
     if(!txt.trim()||loading)return;
-    setInp("");
-    setMsgs(m=>[...m,{role:"user",text:txt}]);
-    setLoading(true);
+    setInp(""); setMsgs(m=>[...m,{role:"user",text:txt}]); setLoading(true);
     const match=qas.find(q=>q.q===txt);
     setTimeout(()=>{setMsgs(m=>[...m,{role:"ai",text:match?match.a:"Doporučuji tuto otázku probrat přímo s MUDr. Vostradovskou."}]);setLoading(false);},1000);
   };
@@ -187,7 +185,6 @@ const MockChat = ({record}) => {
   );
 };
 
-// ── Critical alert ────────────────────────────────────────────────────────────
 const CritAlert = ({values,onDismiss}) => (
   <div style={{position:"absolute",inset:0,background:"rgba(0,0,0,.5)",zIndex:99,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
     <div style={{background:T.white,borderRadius:14,padding:20,border:`2px solid ${T.red}`,width:"100%"}}>
@@ -200,19 +197,15 @@ const CritAlert = ({values,onDismiss}) => (
 );
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// FEATURE A
+// FEATURE A — MEDICAL RECORDS
 // ═══════════════════════════════════════════════════════════════════════════════
 function FeatureA({onBack}) {
-  const [view,setView] = useState("list");
-  const [rec,setRec] = useState(null);
-  const [step,setStep] = useState(0);
-  const [critDone,setCritDone] = useState(false);
+  const [view,setView]=useState("list"); const [rec,setRec]=useState(null);
+  const [step,setStep]=useState(0); const [critDone,setCritDone]=useState(false);
+  const open=r=>{setRec(r);setStep(0);setCritDone(false);setView(r.type);};
+  const reset=()=>{setView("list");setRec(null);};
+  const goStep=n=>setStep(n);
 
-  const open = r => { setRec(r); setStep(0); setCritDone(false); setView(r.type); };
-  const reset = () => { setView("list"); setRec(null); };
-  const goStep = n => setStep(n);
-
-  // ── LIST ──
   if(view==="list") return (
     <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
       <Hdr title="Medical Records" sub="Klinické záznamy" backFn={onBack}/>
@@ -222,25 +215,21 @@ function FeatureA({onBack}) {
           <div style={{display:"flex",gap:8,marginTop:10,flexWrap:"wrap"}}><Tag col="blue">Pacient: {PATIENT.name}</Tag><Tag col="orange">Věk: {PATIENT.age} let</Tag></div>
         </div>
         {[...RECORDS].sort((a,b)=>{
-          const p=d=>{ const[day,mon,yr]=d.split(". "); return new Date(`${yr}-${mon.padStart(2,"0")}-${day.padStart(2,"0")}`); };
+          const p=d=>{const[day,mon,yr]=d.split(". ");return new Date(`${yr}-${mon.padStart(2,"0")}-${day.padStart(2,"0")}`);};
           return p(b.date)-p(a.date);
         }).map(r=>(
           <div key={r.id} onClick={()=>open(r)} style={{background:T.white,borderRadius:12,border:`1.5px solid ${r.statusC==="r"?"#FECACA":T.g200}`,padding:16,marginBottom:10,cursor:"pointer"}}>
             <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
               <div>
-                <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:2}}>
-                  <span style={{fontSize:10,fontWeight:700,letterSpacing:.5,textTransform:"uppercase",color:r.type==="lab"?T.blue:T.orange}}>{r.type==="lab"?"🧪 Lab":"📄 Zpráva"}</span>
-                </div>
+                <div style={{fontSize:10,fontWeight:700,letterSpacing:.5,textTransform:"uppercase",color:r.type==="lab"?T.blue:T.orange,marginBottom:2}}>{r.type==="lab"?"🧪 Lab":"📄 Zpráva"}</div>
                 <div style={{fontSize:14,fontWeight:700,color:T.g900}}>{r.title}</div>
                 <div style={{fontSize:12,color:T.g400,marginTop:2}}>{r.date} · {r.doctor}</div>
               </div>
-              <span style={BADGE_STYLE(r.statusC==="g"?"green":r.statusC==="r"?"red":r.statusC==="o"?"orange":"blue")}>{r.statusL}</span>
+              <span style={stag(r.statusC)}>{r.statusL}</span>
             </div>
             <div style={{fontSize:12,color:T.g500,marginBottom:10}}>{r.summary}</div>
             <div style={{paddingTop:10,borderTop:`1px solid ${T.g100}`,display:"flex",justifyContent:"space-between"}}>
-              <div style={{display:"flex",gap:6}}>
-                {r.type==="lab"?<><Tag col="blue">Lab + vizualizace</Tag><Tag col="blue">AI chat</Tag></>:<><Tag col="blue">AI interpretace</Tag><Tag col="green">Care Journey</Tag></>}
-              </div>
+              <div style={{display:"flex",gap:6}}>{r.type==="lab"?<><Tag col="blue">Lab + vizualizace</Tag><Tag col="blue">AI chat</Tag></>:<><Tag col="blue">AI interpretace</Tag><Tag col="green">Care Journey</Tag></>}</div>
               <span style={{fontSize:12,fontWeight:700,color:T.blue}}>Otevřít →</span>
             </div>
           </div>
@@ -249,7 +238,6 @@ function FeatureA({onBack}) {
     </div>
   );
 
-  // ── LAB (steps 0-3) ──
   if(view==="lab") {
     const STEPS=["Kontext","Interpretace","Chat","Lifestyle"];
     const crits=rec.results.filter(r=>r.status!=="normal");
@@ -257,7 +245,6 @@ function FeatureA({onBack}) {
       <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
         <ProgBar steps={STEPS} cur={step}/>
         <Hdr title={rec.title} sub={rec.date} backFn={step===0?reset:()=>goStep(step-1)}/>
-        {/* scrollable body */}
         {step===0&&<div style={{flex:1,overflowY:"auto",padding:16}}>
           <FadeIn>
             <Card style={{background:T.blueL,border:`1px solid #BFDBFE`}}>
@@ -291,7 +278,10 @@ function FeatureA({onBack}) {
                   <div style={{textAlign:"right"}}><div style={{fontSize:17,fontWeight:700,color:r.status==="high"?T.red:T.g900}}>{r.value}</div><div style={{fontSize:11,color:T.g400}}>{r.unit}</div></div>
                 </div>
                 <PBar value={r.value} min={r.min} max={r.max} status={r.status}/>
-                <div style={{display:"flex",justifyContent:"space-between",marginTop:6}}>                    <span style={BADGE_STYLE(r.status==="normal"?"green":"red")}>{r.status==="normal"?"✓ Normální":"↑ Nad rozsahem"}</span><span style={{fontSize:11,color:T.g500}}>{r.note}</span></div>
+                <div style={{display:"flex",justifyContent:"space-between",marginTop:6}}>
+                  <span style={stag(r.status==="normal"?"g":"r")}>{r.status==="normal"?"✓ Normální":"↑ Nad rozsahem"}</span>
+                  <span style={{fontSize:11,color:T.g500}}>{r.note}</span>
+                </div>
               </div>
             ))}
           </FadeIn>
@@ -309,13 +299,11 @@ function FeatureA({onBack}) {
             {rec.lifestyle.map((l,i)=><Card key={i}><div style={{display:"flex",gap:12,alignItems:"flex-start"}}><span style={{fontSize:26,flexShrink:0}}>{l.icon}</span><div><div style={{fontSize:14,fontWeight:700,color:T.g900,marginBottom:4}}>{l.title}</div><div style={{fontSize:13,color:T.g700,lineHeight:1.6}}>{l.text}</div></div></div></Card>)}
           </FadeIn>
         </div>}
-        {/* nav always last, never overlapped */}
-        <NavRow step={step} total={STEPS.length} onBack={()=>goStep(step-1)} onNext={step===STEPS.length-1?reset:()=>goStep(step+1)} nextLabel={step===0?"✨ Get Insights":step===STEPS.length-1?"✓ Zpět na přehled":"Pokračovat →"}/>
+        <NavRow step={step} total={STEPS.length} onBack={()=>goStep(step-1)} onNext={step===STEPS.length-1?reset:()=>goStep(step+1)}/>
       </div>
     );
   }
 
-  // ── RECORD (steps 0-3) ──
   if(view==="record") {
     const STEPS=["Kontext","Interpretace","Chat","Care Journey"];
     return (
@@ -355,14 +343,14 @@ function FeatureA({onBack}) {
             <Card style={{background:T.greenL,border:`1px solid #6EE7B7`}}>
               <div style={{display:"flex",gap:8,alignItems:"center"}}>
                 <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={T.green} strokeWidth="2.5"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
-                <div><div style={{fontSize:13,fontWeight:700,color:T.green}}>Váš Care Journey</div><div style={{fontSize:11,color:T.g500}}>Plán péče vygenerovaný ze zprávy</div></div>
+                <div><div style={{fontSize:13,fontWeight:700,color:T.green}}>Váš Care Journey</div><div style={{fontSize:11,color:T.g500}}>Plán péče ze zprávy</div></div>
               </div>
             </Card>
             {rec.careJourney.map((c,i)=><Card key={i}><div style={{display:"flex",gap:12,alignItems:"flex-start"}}><span style={{fontSize:26,flexShrink:0}}>{c.icon}</span><div><div style={{fontSize:14,fontWeight:700,color:T.g900,marginBottom:4}}>{c.title}</div><div style={{fontSize:13,color:T.g700,lineHeight:1.6}}>{c.text}</div></div></div></Card>)}
-            <Card style={{background:T.blueL,border:`1px solid #BFDBFE`}}><div style={{fontSize:12,color:T.blue,lineHeight:1.5}}>💡 Tento Care Journey je také dostupný v sekci <strong>Plán péče</strong>.</div></Card>
+            <Card style={{background:T.blueL,border:`1px solid #BFDBFE`}}><div style={{fontSize:12,color:T.blue,lineHeight:1.5}}>💡 Tento Care Journey je také dostupný v sekci <strong>Care Journey</strong> na hlavní stránce.</div></Card>
           </FadeIn>
         </div>}
-        <NavRow step={step} total={STEPS.length} onBack={()=>goStep(step-1)} onNext={step===STEPS.length-1?reset:()=>goStep(step+1)}/>
+        <NavRow step={step} total={STEPS.length} onBack={()=>goStep(step-1)} onNext={step===STEPS.length-1?reset:()=>goStep(step+1)} nextLabel={step===0?"✨ Get Insights":undefined}/>
       </div>
     );
   }
@@ -431,8 +419,8 @@ const OldCarts=({data,onChange,setAlert})=>{
 };
 
 const MedHistory=({data,onChange})=>{
-  const [nc,setNc]=useState("");const [na,setNa]=useState("");
-  const conds=data.conditions||PATIENT.conditions;const allgs=data.allergies||PATIENT.allergies;
+  const [nc,setNc]=useState(""); const [na,setNa]=useState("");
+  const conds=data.conditions||PATIENT.conditions; const allgs=data.allergies||PATIENT.allergies;
   return(<div>
     <Card><SLbl c="Chronická onemocnění"/>
       {conds.map((c,i)=><div key={i} style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:`1px solid ${T.g100}`}}><span style={{fontSize:13,color:T.g700}}>{c}</span><Tag col="blue">ze záznamu</Tag></div>)}
@@ -524,33 +512,142 @@ function FeatureB({onBack}){
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// FEATURE C
+// FEATURE C — CARE JOURNEY
 // ═══════════════════════════════════════════════════════════════════════════════
+const CARE_JOURNEY_DATA = {
+  visitDate:"5. 5. 2025", doctor:"MUDr. Vostradovská",
+  diagnosis:"Hypertenze, bolest levého kolene",
+  nextVisit:{label:"Kontrola PL",date:"23. 5. 2025",daysLeft:18},
+  medication:[
+    {id:"m1",name:"Prestarium 5mg",instruction:"1-0-0 · pokračovat",type:"continue",done:false},
+    {id:"m2",name:"Voltaren Gel",instruction:"Levé koleno · 3× denně",type:"new",done:false},
+  ],
+  followUp:[
+    {id:"f1",label:"Kardiologická kontrola",detail:"Za 12 měsíců",specialist:"MUDr. Horáček",urgent:false,done:false},
+    {id:"f2",label:"Ortopedická kontrola",detail:"Za 14 dní",specialist:"Praha 5 — Waltrovka",urgent:true,done:false},
+  ],
+  physicalRest:[
+    {id:"p1",label:"Relativní klid",detail:"7 dní",done:false},
+    {id:"p2",label:"Vyhnout se námaze a schodům",detail:"Po dobu rekonvalescence",done:false},
+  ],
+  administration:[
+    {id:"a1",type:"sick_leave",label:"e-Neschopenka",detail:"Vydána na 1 týden · digitální",done:false},
+    {id:"a2",type:"referral",label:"Žádanka — RTG kolene",detail:"Levé koleno · prioritní",done:false},
+  ],
+};
+
+const CJRow = ({item, onToggle, badge, action}) => (
+  <div style={{display:"flex",alignItems:"flex-start",gap:12,padding:"10px 0",borderBottom:`1px solid ${T.g100}`}}>
+    <div onClick={onToggle} style={{width:22,height:22,borderRadius:6,border:`1.5px solid ${item.done?T.green:T.g300}`,background:item.done?T.green:T.white,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:1,cursor:"pointer"}}>
+      {item.done&&<svg width={11} height={11} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><polyline points="20,6 9,17 4,12"/></svg>}
+    </div>
+    <div style={{flex:1,minWidth:0}}>
+      <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
+        <span style={{fontSize:13,fontWeight:600,color:item.done?T.g400:T.g900,textDecoration:item.done?"line-through":"none"}}>{item.label||item.name}</span>
+        {badge}
+      </div>
+      <div style={{fontSize:11,color:T.g400,marginTop:2}}>{item.detail||item.instruction||item.specialist}</div>
+    </div>
+    {action}
+  </div>
+);
+
+const CJCard = ({icon,title,count,total,color,children}) => (
+  <div style={{background:T.white,borderRadius:14,border:`1px solid ${T.g200}`,marginBottom:14,overflow:"hidden"}}>
+    <div style={{display:"flex",alignItems:"center",gap:10,padding:"12px 16px",borderBottom:`1px solid ${T.g100}`,background:T.g100}}>
+      <div style={{width:32,height:32,borderRadius:10,background:color+"33",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>{icon}</div>
+      <div style={{flex:1,fontSize:13,fontWeight:700,color:T.g900}}>{title}</div>
+      <span style={BADGE_STYLE(count===total?"green":"blue")}>{count}/{total} done</span>
+    </div>
+    <div style={{padding:"0 16px 4px"}}>{children}</div>
+  </div>
+);
+
 function FeatureC({onBack}){
-  const[tab,setTab]=useState("plan");const[rxR,setRxR]=useState({});const[rehab,setRehab]=useState({});const[diet,setDiet]=useState({});
-  const rxList=[{name:"Amoxicilin 500 mg",dose:"1 kapsle",freq:"3× denně · 7 dní",u:"r"},{name:"Ibuprofen 400 mg",dose:"1 tableta",freq:"Dle potřeby",u:"o"},{name:"Probiotikum (Linex)",dose:"1 kapsle",freq:"2× denně · 14 dní",u:"g"}];
-  const refs=[{spec:"Ortopedie",reason:"Kontrola disku L5-S1",clinic:"Praha 5 — Waltrovka",priority:"Do 4 týdnů",u:"r"},{spec:"Fyzioterapie",reason:"Rehabilitace bederní páteře",clinic:"CM Rehabilitační centrum",priority:"Do 2 týdnů",u:"o"}];
-  const rehabItems=["10 min ranní protažení","Cvičení kočka-kráva × 15 opakování","Mosty (glute bridges) × 20 opakování","30 min chůze denně","Nesedět déle než 45 minut"];
-  const dietItems=["Zvýšit příjem vody na 2,5 l/den","Omezit průmyslově zpracované potraviny","Přidat Omega-3 (ryby, len)","Vyhýbat se alkoholu během antibiotik"];
-  const daysLeft=18;const prog=Math.round((30-daysLeft)/30*100);
-  return(<div style={{display:"flex",flexDirection:"column",height:"100%"}}><Hdr title="Plán péče" backFn={onBack}/><div style={{background:T.white,borderBottom:`1px solid ${T.g200}`,display:"flex",flexShrink:0}}>{[["plan","Plán"],["rx","Recepty"],["referrals","Doporučení"]].map(([t,l])=><button key={t} onClick={()=>setTab(t)} style={{flex:1,padding:"11px 0",border:"none",background:"transparent",cursor:"pointer",fontSize:12,fontWeight:tab===t?700:400,color:tab===t?T.blue:T.g500,borderBottom:tab===t?`2px solid ${T.blue}`:"2px solid transparent"}}>{l}</button>)}</div><div style={{flex:1,overflowY:"auto",padding:16}}>{tab==="plan"&&<><div style={{background:T.blue,borderRadius:12,padding:16,marginBottom:12}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}><div><div style={{fontSize:11,fontWeight:600,color:"rgba(255,255,255,.65)",textTransform:"uppercase",letterSpacing:.8}}>Příští schůzka</div><div style={{fontSize:26,fontWeight:700,color:T.white,marginTop:2,lineHeight:1}}>{daysLeft} <span style={{fontSize:14,fontWeight:400}}>dní</span></div><div style={{fontSize:12,color:"rgba(255,255,255,.75)",marginTop:2}}>Kontrola PL · 23. 5. 2025</div></div><div style={{width:52,height:52,borderRadius:26,background:"rgba(255,255,255,.15)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}><div style={{fontSize:16,fontWeight:700,color:T.white}}>{prog}%</div><div style={{fontSize:8,color:"rgba(255,255,255,.65)"}}>uzdravení</div></div></div><div style={{height:4,background:"rgba(255,255,255,.2)",borderRadius:2}}><div style={{height:"100%",background:T.white,borderRadius:2,width:`${prog}%`}}/></div></div><Card><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}><SLbl c="Rehabilitace"/>      <span style={BADGE_STYLE(Object.values(rehab).filter(Boolean).length===rehabItems.length?"green":"blue")}>{Object.values(rehab).filter(Boolean).length}/{rehabItems.length} hotovo</span></div>{rehabItems.map((item,i)=><div key={i} style={{display:"flex",alignItems:"flex-start",gap:10,padding:"8px 0",borderBottom:`1px solid ${T.g100}`,cursor:"pointer"}} onClick={()=>setRehab(r=>({...r,[i]:!r[i]}))}><div style={{width:20,height:20,borderRadius:5,border:`1.5px solid ${rehab[i]?T.blue:T.g300}`,background:rehab[i]?T.blue:"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:1}}>{rehab[i]&&<svg width={11} height={11} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><polyline points="20,6 9,17 4,12"/></svg>}</div><span style={{fontSize:13,color:rehab[i]?T.g400:T.g700,textDecoration:rehab[i]?"line-through":"none"}}>{item}</span></div>)}</Card><Card><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}><SLbl c="Dieta"/>      <span style={BADGE_STYLE(Object.values(diet).filter(Boolean).length===dietItems.length?"green":"blue")}>{Object.values(diet).filter(Boolean).length}/{dietItems.length}</span></div>{dietItems.map((item,i)=><div key={i} style={{display:"flex",alignItems:"flex-start",gap:10,padding:"8px 0",borderBottom:`1px solid ${T.g100}`,cursor:"pointer"}} onClick={()=>setDiet(d=>({...d,[i]:!d[i]}))}><div style={{width:20,height:20,borderRadius:5,border:`1.5px solid ${diet[i]?T.green:T.g300}`,background:diet[i]?T.green:"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:1}}>{diet[i]&&<svg width={11} height={11} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><polyline points="20,6 9,17 4,12"/></svg>}</div><span style={{fontSize:13,color:diet[i]?T.g400:T.g700,textDecoration:diet[i]?"line-through":"none"}}>{item}</span></div>)}</Card></>}{tab==="rx"&&<>{rxList.map((rx,i)=><Card key={i}><div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><div><div style={{fontSize:14,fontWeight:700,color:T.g900}}>{rx.name}</div><div style={{fontSize:12,color:T.g400}}>{rx.dose} · {rx.freq}</div></div>              <span style={BADGE_STYLE(rx.u==="r"?"red":rx.u==="o"?"orange":"green")}>{rx.u==="r"?"Prioritní":rx.u==="o"?"Pravidelný":"Podpůrný"}</span></div><button onClick={()=>setRxR(r=>({...r,[i]:!r[i]}))} style={{width:"100%",padding:9,borderRadius:8,cursor:"pointer",fontSize:13,fontWeight:700,border:`1px solid ${rxR[i]?T.green:T.blue}`,background:rxR[i]?T.greenL:"transparent",color:rxR[i]?T.green:T.blue}}>{rxR[i]?"✓ Připomínka nastavena":"🔔 Nastavit připomínku"}</button></Card>)}</>}{tab==="referrals"&&<>{refs.map((r,i)=><Card key={i}><div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><div style={{fontSize:14,fontWeight:700,color:T.g900}}>{r.spec}</div>              <span style={BADGE_STYLE(r.u==="r"?"red":r.u==="o"?"orange":"green")}>{r.priority}</span></div><div style={{fontSize:13,color:T.g400,marginBottom:4}}>{r.reason}</div><div style={{fontSize:12,color:T.g400,marginBottom:12}}>📍 {r.clinic}</div><button style={{width:"100%",padding:10,borderRadius:10,border:"none",background:T.blue,color:T.white,fontWeight:700,fontSize:13,cursor:"pointer"}}>Objednat se →</button></Card>)}</>}</div></div>);
+  const [cj,setCj]=useState(CARE_JOURNEY_DATA);
+  const tog=(section,id)=>setCj(prev=>({...prev,[section]:prev[section].map(it=>it.id===id?{...it,done:!it.done}:it)}));
+  const dc=s=>cj[s].filter(i=>i.done).length;
+  const tc=s=>cj[s].length;
+  const prog=Math.round((30-cj.nextVisit.daysLeft)/30*100);
+  return(
+    <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
+      <Hdr title="Care Journey" sub="Unified Action Center" backFn={onBack}/>
+      <div style={{flex:1,overflowY:"auto",padding:16}}>
+        {/* Banner */}
+        <div style={{background:T.blue,borderRadius:14,padding:16,marginBottom:16}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}>
+            <div>
+              <div style={{fontSize:10,fontWeight:700,color:"rgba(255,255,255,.6)",textTransform:"uppercase",letterSpacing:1}}>Příští návštěva</div>
+              <div style={{fontSize:24,fontWeight:700,color:T.white,marginTop:2,lineHeight:1}}>{cj.nextVisit.daysLeft} <span style={{fontSize:13,fontWeight:400}}>dní</span></div>
+              <div style={{fontSize:12,color:"rgba(255,255,255,.7)",marginTop:2}}>{cj.nextVisit.label} · {cj.nextVisit.date}</div>
+            </div>
+            <div style={{width:50,height:50,borderRadius:25,background:"rgba(255,255,255,.15)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
+              <div style={{fontSize:15,fontWeight:700,color:T.white}}>{prog}%</div>
+              <div style={{fontSize:8,color:"rgba(255,255,255,.6)"}}>recovery</div>
+            </div>
+          </div>
+          <div style={{height:4,background:"rgba(255,255,255,.2)",borderRadius:2}}><div style={{height:"100%",background:T.white,borderRadius:2,width:`${prog}%`}}/></div>
+          <div style={{fontSize:11,color:"rgba(255,255,255,.6)",marginTop:8}}>{cj.doctor} · {cj.diagnosis}</div>
+        </div>
+
+        {/* 1. Medication */}
+        <CJCard icon="💊" title="Medication" count={dc("medication")} total={tc("medication")} color={T.blue}>
+          {cj.medication.map(m=>(
+            <CJRow key={m.id} item={m} onToggle={()=>tog("medication",m.id)}
+              badge={<span style={BADGE_STYLE(m.type==="new"?"orange":"green")}>{m.type==="new"?"New":"Continue"}</span>}/>
+          ))}
+        </CJCard>
+
+        {/* 2. Follow-Up */}
+        <CJCard icon="📅" title="Follow-Up" count={dc("followUp")} total={tc("followUp")} color={T.green}>
+          {cj.followUp.map(f=>(
+            <CJRow key={f.id} item={{...f,detail:`${f.detail} · ${f.specialist}`}} onToggle={()=>tog("followUp",f.id)}
+              badge={f.urgent?<span style={BADGE_STYLE("red")}>Urgent</span>:null}
+              action={
+                <button onClick={e=>e.stopPropagation()} style={{padding:"5px 10px",borderRadius:8,border:`1px solid ${T.green}`,background:T.greenL,color:T.green,fontSize:11,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>
+                  📆 Objednat
+                </button>
+              }/>
+          ))}
+        </CJCard>
+
+        {/* 3. Physical Rest */}
+        <CJCard icon="🛌" title="Physical Rest" count={dc("physicalRest")} total={tc("physicalRest")} color={T.orange}>
+          {cj.physicalRest.map(p=>(
+            <CJRow key={p.id} item={p} onToggle={()=>tog("physicalRest",p.id)}/>
+          ))}
+        </CJCard>
+
+        {/* 4. Administration & Documents */}
+        <CJCard icon="📋" title="Administration & Documents" count={dc("administration")} total={tc("administration")} color={T.red}>
+          {cj.administration.map(a=>(
+            <CJRow key={a.id} item={a} onToggle={()=>tog("administration",a.id)}
+              action={
+                <button onClick={e=>e.stopPropagation()} style={{padding:"5px 10px",borderRadius:8,border:`1px solid ${T.blue}`,background:T.blueL,color:T.blue,fontSize:11,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>
+                  {a.type==="sick_leave"?"👁 View":"⬇ Download"}
+                </button>
+              }/>
+          ))}
+        </CJCard>
+      </div>
+    </div>
+  );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ROOT — phone shell WITHOUT position:absolute nav
+// ROOT APP
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function App(){
-  const[screen,setScreen]=useState("home");
-  const[navTab,setNavTab]=useState("Moje zdraví");
+  const [screen,setScreen]=useState("home");
+  const [navTab,setNavTab]=useState("Moje zdraví");
 
   const features=[
     {key:"A",icon:<svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={T.red} strokeWidth="2" strokeLinecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>,title:"Medical Records",sub:"AI Med-Explainer",desc:"2 laboratorní výsledky a 2 lékařské zprávy čekají na interpretaci.",badge:"NOVÉ",bc:"r",meta:"28. 4. 2025"},
     {key:"B",icon:<svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={T.red} strokeWidth="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>,title:"Nadcházející návštěva",sub:"Digitální sestra — příjem",desc:"Vyplňte příjmový dotazník. 5 typů návštěvy, adaptivní triage.",badge:"DNES",bc:"r",meta:"5 větví"},
-    {key:"C",icon:<svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={T.red} strokeWidth="2"><path d="M9 12h6M9 16h6M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/></svg>,title:"Plán péče",sub:"Péče po návštěvě",desc:"3 recepty, 2 doporučení a denní rehabilitační checklist.",badge:"18 dní",bc:"b",meta:"Kontrola: 23. 5."},
+    {key:"C",icon:<svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={T.red} strokeWidth="2"><path d="M9 12h6M9 16h6M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/></svg>,title:"Care Journey",sub:"Unified Action Center",desc:"Medication, follow-up, physical rest a dokumenty po poslední návštěvě.",badge:"18 dní",bc:"b",meta:"Kontrola: 23. 5."},
   ];
 
-  // Bottom nav as flex row (NOT position:absolute)
-  const BottomNav = () => (
+  const BottomNav=()=>(
     <div style={{background:T.white,borderTop:`1px solid ${T.g200}`,display:"flex",alignItems:"center",justifyContent:"space-around",padding:"8px 0 12px",flexShrink:0}}>
       {[["🏠","Události"],["♥","Moje zdraví"],null,["✉","Novinky"],["👤","Profil"]].map((item,i)=>
         item===null
@@ -560,15 +657,12 @@ export default function App(){
     </div>
   );
 
-  return (
+  return(
     <div style={{background:"#111827",minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
       <div style={{width:375,height:780,background:T.bg,borderRadius:36,border:"8px solid #111827",overflow:"hidden",display:"flex",flexDirection:"column",fontFamily:"'Inter','Helvetica Neue',Arial,sans-serif"}}>
-        {/* status bar */}
         <div style={{background:T.white,padding:"12px 20px 8px",display:"flex",justifyContent:"space-between",fontSize:12,fontWeight:600,color:T.g900,flexShrink:0}}>
           <span>9:41</span><span>▶ ◀ ■ 95%</span>
         </div>
-
-        {/* main content — takes all remaining space */}
         <div style={{flex:1,minHeight:0,display:"flex",flexDirection:"column"}}>
           {screen==="A"&&<FeatureA onBack={()=>setScreen("home")}/>}
           {screen==="B"&&<FeatureB onBack={()=>setScreen("home")}/>}
@@ -605,8 +699,6 @@ export default function App(){
             </div>
           </>}
         </div>
-
-        {/* bottom nav — always in normal flow, never overlaps content */}
         <BottomNav/>
       </div>
     </div>
