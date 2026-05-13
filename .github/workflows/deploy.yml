@@ -28,7 +28,7 @@ jobs:
         with:
           path: dist
 
- deploy:
+deploy:
     needs: build_site
     runs-on: ubuntu-latest
     environment:
