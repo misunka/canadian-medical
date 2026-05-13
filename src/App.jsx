@@ -310,7 +310,7 @@ function FeatureA({onBack}) {
           </FadeIn>
         </div>}
         {/* nav always last, never overlapped */}
-        <NavRow step={step} total={STEPS.length} onBack={()=>goStep(step-1)} onNext={step===STEPS.length-1?reset:()=>goStep(step+1)}/>
+        <NavRow step={step} total={STEPS.length} onBack={()=>goStep(step-1)} onNext={step===STEPS.length-1?reset:()=>goStep(step+1)} nextLabel={step===0?"✨ Get Insights":step===STEPS.length-1?"✓ Zpět na přehled":"Pokračovat →"}/>
       </div>
     );
   }
