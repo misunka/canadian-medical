@@ -9,6 +9,149 @@ const T = {
   g500:"#6B7280", g700:"#374151", g900:"#111827", white:"#FFFFFF", bg:"#F4F6FA",
 };
 
+// ─── AI HEALTH STATUS STATES ─────────────────────────────────────────────────
+const AI_STATES = {
+  A: {
+    mode: "Recovery Mode",
+    modeColor: T.green,
+    modeBg: T.greenL,
+    icon: "🦵",
+    headline: "Day 4 of recovery — you're on track.",
+    body: "Your knee inflammation should be decreasing. Don't forget your 2:00 PM Voltaren Gel application — consistency is key for faster healing.",
+    cta: "Open Care Journey",
+    ctaTarget: "C",
+    metric: { label: "Recovery Progress", value: 65, color: T.green },
+    task: { label: "Next: Voltaren Gel", time: "14:00", icon: "💊" },
+    patientState: { activeCase:"Knee Entezopathy", daysInRecovery:4, nextTask:"Medication: Voltaren Gel", nextTaskTime:"14:00", recoveryProgress:65 },
+  },
+  B: {
+    mode: "Preventive Mode",
+    modeColor: T.orange,
+    modeBg: T.orangeL,
+    icon: "❤️",
+    headline: "Your BP this week is slightly elevated.",
+    body: "Average 138/88 mmHg — just above target. Prioritize 7+ hours of sleep tonight and log your morning measurement to help Dr. Vostradovská see the trend.",
+    cta: "Log BP Reading",
+    ctaTarget: "C",
+    metric: { label: "Weekly BP Trend", value: 48, color: T.orange },
+    task: { label: "Morning BP log due", time: "07:00", icon: "📊" },
+    patientState: { activeCase:"Hypertension Monitoring", avgSBP:138, avgDBP:88, targetSBP:130, sleepGoal:"7h+", logsThisWeek:3 },
+  },
+  C: {
+    mode: "Action Required",
+    modeColor: T.blue,
+    modeBg: T.blueL,
+    icon: "📋",
+    headline: "New results in — and good news inside!",
+    body: "Your lab results are ready and interpreted. Your iron levels are back to normal! See you tomorrow at 10:00 AM with Dr. Vostradovská.",
+    cta: "View Results",
+    ctaTarget: "A",
+    metric: { label: "Checklist Completion", value: 80, color: T.blue },
+    task: { label: "Appointment tomorrow", time: "10:00", icon: "📅" },
+    patientState: { newResults:true, ironStatus:"normal", appointmentTomorrow:true, appointmentTime:"10:00", doctor:"MUDr. Vostradovská" },
+  },
+};
+
+// ─── AI HEALTH CARD ───────────────────────────────────────────────────────────
+function AIHealthCard({ onNavigate }) {
+  const [activeState, setActiveState] = useState("A");
+  const [showSwitcher, setShowSwitcher] = useState(false);
+  const [animKey, setAnimKey] = useState(0);
+  const s = AI_STATES[activeState];
+
+  const switchState = (key) => {
+    setActiveState(key);
+    setAnimKey(k => k + 1);
+  };
+
+  return (
+    <div style={{ marginBottom: 16 }}>
+      {/* Main AI Card */}
+      <div key={animKey} style={{
+        borderRadius: 16,
+        background: `linear-gradient(135deg, #EFF6FF 0%, #F0FDF4 100%)`,
+        border: `1px solid #BFDBFE`,
+        padding: 16,
+        position: "relative",
+        overflow: "hidden",
+        animation: "fadeSlide .3s ease",
+      }}>
+        {/* Subtle background decoration */}
+        <div style={{ position:"absolute", top:-20, right:-20, width:100, height:100, borderRadius:50, background:"rgba(28,59,142,.05)", pointerEvents:"none" }}/>
+        <div style={{ position:"absolute", bottom:-30, left:-10, width:80, height:80, borderRadius:40, background:"rgba(34,160,107,.05)", pointerEvents:"none" }}/>
+
+        {/* Header row */}
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:10 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+            <span style={{ fontSize:18 }}>{s.icon}</span>
+            <div>
+              <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                <span style={{ fontSize:10, fontWeight:700, color:s.modeColor, letterSpacing:.5, textTransform:"uppercase" }}>{s.mode}</span>
+                <span style={{ fontSize:10, background:"rgba(124,58,237,.1)", color:"#7C3AED", borderRadius:10, padding:"1px 7px", fontWeight:700 }}>✨ AI Insight</span>
+              </div>
+              <div style={{ fontSize:14, fontWeight:700, color:T.g900, marginTop:2, lineHeight:1.3 }}>{s.headline}</div>
+            </div>
+          </div>
+          {/* Circular progress */}
+          <div style={{ flexShrink:0, position:"relative", width:44, height:44 }}>
+            <svg width={44} height={44} viewBox="0 0 44 44" style={{ transform:"rotate(-90deg)" }}>
+              <circle cx={22} cy={22} r={18} fill="none" stroke={T.g200} strokeWidth={4}/>
+              <circle cx={22} cy={22} r={18} fill="none" stroke={s.metric.color} strokeWidth={4}
+                strokeDasharray={`${2*Math.PI*18}`}
+                strokeDashoffset={`${2*Math.PI*18*(1-s.metric.value/100)}`}
+                strokeLinecap="round"
+                style={{ transition:"stroke-dashoffset .6s ease" }}
+              />
+            </svg>
+            <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:700, color:s.metric.color }}>{s.metric.value}%</div>
+          </div>
+        </div>
+
+        {/* Body text */}
+        <p style={{ fontSize:12.5, color:T.g700, lineHeight:1.6, margin:"0 0 12px" }}>{s.body}</p>
+
+        {/* Progress bar */}
+        <div style={{ marginBottom:12 }}>
+          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
+            <span style={{ fontSize:10, color:T.g400, fontWeight:600 }}>{s.metric.label}</span>
+            <span style={{ fontSize:10, color:s.metric.color, fontWeight:700 }}>{s.metric.value}%</span>
+          </div>
+          <div style={{ height:4, background:T.g200, borderRadius:2 }}>
+            <div style={{ height:"100%", background:s.metric.color, borderRadius:2, width:`${s.metric.value}%`, transition:"width .6s ease" }}/>
+          </div>
+        </div>
+
+        {/* Footer: task + CTA */}
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:6, background:"rgba(255,255,255,.7)", borderRadius:8, padding:"5px 10px", border:`1px solid ${T.g200}` }}>
+            <span style={{ fontSize:13 }}>{s.task.icon}</span>
+            <span style={{ fontSize:11, color:T.g700, fontWeight:600 }}>{s.task.label}</span>
+            <span style={{ fontSize:11, color:T.g400 }}>· {s.task.time}</span>
+          </div>
+          <button onClick={() => onNavigate(s.ctaTarget)} style={{ padding:"6px 12px", borderRadius:8, border:"none", background:s.modeColor, color:T.white, fontSize:11, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap" }}>
+            {s.cta} →
+          </button>
+        </div>
+
+        {/* Tap to reveal switcher */}
+        <div onClick={() => setShowSwitcher(v => !v)} style={{ position:"absolute", top:8, right:8, width:6, height:6, borderRadius:3, background:T.g300, cursor:"pointer" }}/>
+      </div>
+
+      {/* Demo state switcher (hidden by default, for presentation) */}
+      {showSwitcher && (
+        <div style={{ background:T.white, border:`1px solid ${T.g200}`, borderRadius:12, padding:"10px 14px", marginTop:6, display:"flex", alignItems:"center", gap:8 }}>
+          <span style={{ fontSize:10, fontWeight:700, color:T.g400, textTransform:"uppercase", letterSpacing:.5, flexShrink:0 }}>Demo</span>
+          {[["A","🦵 Recovery"],["B","❤️ Preventive"],["C","📋 Action"]].map(([k,l])=>(
+            <button key={k} onClick={()=>switchState(k)} style={{ flex:1, padding:"6px 8px", borderRadius:8, border:`1.5px solid ${activeState===k?AI_STATES[k].modeColor:T.g200}`, background:activeState===k?AI_STATES[k].modeBg:T.white, color:activeState===k?AI_STATES[k].modeColor:T.g500, fontSize:10, fontWeight:700, cursor:"pointer" }}>{l}</button>
+          ))}
+        </div>
+      )}
+
+      <style>{`@keyframes fadeSlide{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}`}</style>
+    </div>
+  );
+}
+
 // ─── PATIENT ──────────────────────────────────────────────────────────────────
 const PATIENT = {
   name:"Michaela Nováková", age:54, doctor:"MUDr. Vostradovská",
@@ -682,9 +825,8 @@ export default function App(){
               <Leaf/><div style={{fontSize:13,fontWeight:700,color:T.blue,letterSpacing:1.2,textTransform:"uppercase"}}>Canadian Medical</div><div style={{fontSize:11,color:T.g400}}>Patient Engagement Suite</div>
             </div>
             <div style={{flex:1,overflowY:"auto",padding:16}}>
-              <div style={{background:T.blueL,border:`1px solid #BFDBFE`,borderRadius:10,padding:16,marginBottom:12,marginTop:4}}>
-                <div style={{fontSize:15,fontWeight:700,color:T.blue}}>Dobré ráno, {PATIENT.name} 👋</div>
-                <div style={{fontSize:13,color:T.g500,marginTop:4,lineHeight:1.5}}>Máte <strong style={{color:T.blue}}>1 nadcházející návštěvu</strong> a aktivní plán péče.</div>
+              <div style={{marginTop:4}}>
+                <AIHealthCard onNavigate={setScreen}/>
               </div>
               <div style={{fontSize:11,fontWeight:700,color:T.g400,letterSpacing:.8,textTransform:"uppercase",margin:"4px 0 10px"}}>Funkce</div>
               {features.map(f=>(
